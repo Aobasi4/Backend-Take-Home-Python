@@ -3,10 +3,39 @@ import typing
 
 class UsageParser(object):
     @staticmethod
-    def parseExtended (object) -> typing.List:
-        pass
+    def parseExtended (obj) -> typing.List:
+        # order : <id>,<dmcc>,<mnc>,<bytes_used>,<cellid> everything an int besides dmcc 
+        basicList = {}
+
+        basicList["id"] = int(obj[0])
+        basicList["dmcc"] = obj[1]
+        basicList["mnc"] = int(obj[2])
+        basicList["bytes_used"] = int(obj[3])
+        basicList["cellid"] = int(obj[4])
+        basicList["ip"] = None
+
+        return (basicList)
+        
     @staticmethod
-    def parseHex (object) -> typing.List:
+# - Bytes 1-2 → `mnc`
+# - Bytes 3-4 > `bytes_used`
+# - Bytes 5-8 → `cellid`
+# - Bytes 9-12 → `ip`
+#     - String
+#     - Each byte is one segment of the ip, separated by a period: e.g. `c0a80001` would be `'192.168.0.1'`
+    def parseHex (obj) -> typing.List:
+
+        basicList = {}
+
+        basicList["id"] = int(obj[0])
+        basicList["dmcc"] = int(obj[1][0:4])
+        basicList["mnc"] = None
+        basicList["bytes_used"] = None
+        basicList["cellid"] = None
+        basicList["ip"] = None
+
+        return (basicList)
+        
         pass
     #Takes in a List and return a JSON-ish object containing the ID and bytes_used which are both integers
     # Note to Amara: You can speicfy that this List is String to Int for clairty 
@@ -31,15 +60,13 @@ class UsageParser(object):
         #This method will determine which of the other parse methods should be used and then pass the
         # Object to said parse method. Then return it
         finalEmptyList = []
-        decodeArray = input[0].split(",")
-        id = decodeArray[0]
         #Determine what kind of parsing needs to be done
         for entry in input:
             decodeArray = entry.split(",")
             id = decodeArray[0]
-            if id[-1] == 4:
+            if id[-1] == '4':
                 finalEmptyList.append(UsageParser.parseExtended(decodeArray))
-            elif id[-1] == 6:
+            elif id[-1] == '6':
                 finalEmptyList.append(UsageParser.parseHex(decodeArray))
             else:
                 finalEmptyList.append(UsageParser.parseBasic(decodeArray))

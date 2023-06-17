@@ -16,8 +16,12 @@ class UsageParser(object):
     def parseBasic (obj) -> typing.List:
         basicList = {}
 
-        basicList["id"] = obj[0]
-        basicList["bytes_used"] = obj[1]
+        basicList["id"] = int(obj[0])
+        basicList["bytes_used"] = int(obj[1])
+        basicList["cellid"] = None
+        basicList["dmcc"] = None
+        basicList["ip"] = None
+        basicList["mnc"] = None
 
         return (basicList)
         
@@ -30,10 +34,17 @@ class UsageParser(object):
         decodeArray = input[0].split(",")
         id = decodeArray[0]
         #Determine what kind of parsing needs to be done
-        if id[-1] == 4:
-           finalEmptyList.append(UsageParser.parseExtended(decodeArray))
-        elif id[-1] == 6:
-            finalEmptyList.append(UsageParser.parseHex(decodeArray))
-        else:
-            finalEmptyList.append(UsageParser.parseBaisc(decodeArray))
+        for entry in input:
+            decodeArray = entry.split(",")
+            id = decodeArray[0]
+            if id[-1] == 4:
+                finalEmptyList.append(UsageParser.parseExtended(decodeArray))
+            elif id[-1] == 6:
+                finalEmptyList.append(UsageParser.parseHex(decodeArray))
+            else:
+                finalEmptyList.append(UsageParser.parseBasic(decodeArray))
+        
+        return finalEmptyList
+           
+        
 

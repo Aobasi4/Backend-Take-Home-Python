@@ -3,81 +3,94 @@ import typing
 
 class UsageParser(object):
     @staticmethod
-    def parseExtended (obj) -> typing.List:
+    def parseExtended (decodeList: list) -> typing.Dict:
         # order : <id>,<dmcc>,<mnc>,<bytes_used>,<cellid> everything an int besides dmcc 
-        basicList = {}
+        extendedDict = {}
 
-        basicList["id"] = int(obj[0])
-        basicList["dmcc"] = obj[1]
-        basicList["mnc"] = int(obj[2])
-        basicList["bytes_used"] = int(obj[3])
-        basicList["cellid"] = int(obj[4])
-        basicList["ip"] = None
+        extendedDict["id"] = int(decodeList[0])
+        extendedDict["dmcc"] = decodeList[1]
+        extendedDict["mnc"] = int(decodeList[2])
+        extendedDict["bytes_used"] = int(decodeList[3])
+        extendedDict["cellid"] = int(decodeList[4])
+        extendedDict["ip"] = None
 
-        return (basicList)
+        return (extendedDict)
         
     @staticmethod
-# - Bytes 1-2 → `mnc`
-# - Bytes 3-4 > `bytes_used`
-# - Bytes 5-8 → `cellid`
-# - Bytes 9-12 → `ip`
-#     - String
-#     - Each byte is one segment of the ip, separated by a period: e.g. `c0a80001` would be `'192.168.0.1'`
-    def parseHex (obj) -> typing.List:
+    def parseHex (decodeList: list) -> typing.Dict:
 
-        basicList = {}
+        hexDict = {}
 
-        basicList["id"] = int(obj[0])
-        basicList["mnc"] = int(obj[1][0:4],16)
-        basicList["dmcc"] = None
-        basicList["bytes_used"] = int(obj[1][4:8],16)
-        basicList["cellid"] = int(obj[1][8:16],16)
-        basicList["ip"] = UsageParser.createHexIP(obj[1][16:])
+        hexDict["id"] = int(decodeList[0])
+        hexDict["mnc"] = int(decodeList[1][0:4],16)
+        hexDict["dmcc"] = None
+        hexDict["bytes_used"] = int(decodeList[1][4:8],16)
+        hexDict["cellid"] = int(decodeList[1][8:16],16)
+        hexDict["ip"] = UsageParser.createHexIP(decodeList[1][16:])
 
-        return (basicList)
-        
-        pass
-    def createHexIP (obj) -> typing.ByteString:
-        bytes = ["".join(x) for x in zip(*[iter(obj)]*2)]
-        bytes = [int(x, 16) for x in bytes]
-        ip = ".".join(str(x) for x in bytes)
+        return (hexDict)
+    '''
+    Description: Takes in the last 8 characters in the string: decodeList and turns into a an ip address 
+    It first joins them into groups of 2 character strings, converts those strings to base 16 intergers, 
+    then joins them back into 1 string which is returned 
+
+    bytes: a list of strings representing each hexadecimal bit to be converted 
+
+    intBytes: a list of base 16 integers 
+
+    ip: A string representing the final ip address 
+    '''
+    @staticmethod    
+    def createHexIP (decodeList: list) -> typing.ByteString:
+        bytes = ["".join(x) for x in zip(*[iter(decodeList)]*2)]
+        intBytes = [int(x, 16) for x in bytes]
+        ip = ".".join(str(x) for x in intBytes)
         return ip
 
-    #Takes in a List and return a JSON-ish object containing the ID and bytes_used which are both integers
-    # Note to Amara: You can speicfy that this List is String to Int for clairty 
-    # Note: The parse method essentially will be a for loop that creates the Json object because you have multiple per input! 
-    # Make variable names more conscise and make sure you're workflow is well commented and stuff
     @staticmethod
-    def parseBasic (obj) -> typing.List:
-        basicList = {}
+    def parseBasic (decodeList: list) -> typing.Dict:
+        basicDict = {}
 
-        basicList["id"] = int(obj[0])
-        basicList["bytes_used"] = int(obj[1])
-        basicList["cellid"] = None
-        basicList["dmcc"] = None
-        basicList["ip"] = None
-        basicList["mnc"] = None
+        basicDict["id"] = int(decodeList[0])
+        basicDict["bytes_used"] = int(decodeList[1])
+        basicDict["cellid"] = None
+        basicDict["dmcc"] = None
+        basicDict["ip"] = None
+        basicDict["mnc"] = None
 
-        return (basicList)
-        
+        return (basicDict)
+    
+    '''
+    Desciption: Takes in a tuple of strings, for each string it determines which parsing method should be used ,
+    and then appends the result to a list which is returned 
 
+    finalParsedList : A list of Dictionaries that contains the parsed strings 
+
+    decodeList : A list of each entry from the input 
+
+    id : a string representing the id, is always the first item in decodeList
+
+    lastDigit : the last digit in the id, determines which parsing method should be used 
+     '''   
     @staticmethod
     def parse(*input: str) -> typing.List[typing.Mapping[str, typing.Any]]:
-        #This method will determine which of the other parse methods should be used and then pass the
-        # Object to said parse method. Then return it
-        finalEmptyList = []
-        #Determine what kind of parsing needs to be done
+
+        finalParsedList = []
+
         for entry in input:
-            decodeArray = entry.split(",")
-            id = decodeArray[0]
-            if id[-1] == '4':
-                finalEmptyList.append(UsageParser.parseExtended(decodeArray))
-            elif id[-1] == '6':
-                finalEmptyList.append(UsageParser.parseHex(decodeArray))
+
+            decodeList = entry.split(",")
+            id = decodeList[0]
+            lastDigit = id[-1]
+
+            if lastDigit == '4':
+                finalParsedList.append(UsageParser.parseExtended(decodeList))
+            elif lastDigit == '6':
+                finalParsedList.append(UsageParser.parseHex(decodeList))
             else:
-                finalEmptyList.append(UsageParser.parseBasic(decodeArray))
+                finalParsedList.append(UsageParser.parseBasic(decodeList))
         
-        return finalEmptyList
+        return finalParsedList
            
         
 

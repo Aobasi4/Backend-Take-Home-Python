@@ -4,7 +4,6 @@ import typing
 class UsageParser(object):
     @staticmethod
     def parseExtended (decodeList: list) -> typing.Dict:
-        # order : <id>,<dmcc>,<mnc>,<bytes_used>,<cellid> everything an int besides dmcc 
         extendedDict = {}
 
         extendedDict["id"] = int(decodeList[0])
@@ -18,7 +17,7 @@ class UsageParser(object):
         
     @staticmethod
     def parseHex (decodeList: list) -> typing.Dict:
-
+        # Since this is a hexadecimal, the non-id integers must be base-16
         hexDict = {}
 
         hexDict["id"] = int(decodeList[0])
@@ -31,14 +30,14 @@ class UsageParser(object):
         return (hexDict)
     '''
     Description: Takes in the last 8 characters in the string: decodeList and turns into a an ip address 
-    It first joins them into groups of 2 character strings, converts those strings to base 16 intergers, 
+    It first joins them into groups of 2 character strings, converts those strings to base 16 integers, 
     then joins them back into 1 string which is returned 
 
     bytes: a list of strings representing each hexadecimal bit to be converted 
 
     intBytes: a list of base 16 integers 
 
-    ip: A string representing the final ip address 
+    ip: A string representing the final ip address
     '''
     @staticmethod    
     def createHexIP (decodeList: list) -> typing.ByteString:
@@ -61,8 +60,8 @@ class UsageParser(object):
         return (basicDict)
     
     '''
-    Desciption: Takes in a tuple of strings, for each string it determines which parsing method should be used ,
-    and then appends the result to a list which is returned 
+    Description: Takes in a tuple of strings, for each string it determines which parsing method should be used,
+    and then appends the result to a list which is returned. 
 
     finalParsedList : A list of Dictionaries that contains the parsed strings 
 
@@ -70,8 +69,8 @@ class UsageParser(object):
 
     id : a string representing the id, is always the first item in decodeList
 
-    lastDigit : the last digit in the id, determines which parsing method should be used 
-     '''   
+    lastDigit : the last digit in the id, determines which parsing method should be used
+    '''   
     @staticmethod
     def parse(*input: str) -> typing.List[typing.Mapping[str, typing.Any]]:
 
